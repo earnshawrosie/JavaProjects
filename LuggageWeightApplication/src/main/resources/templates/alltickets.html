@@ -1,0 +1,37 @@
+<html xmlns:th="https://www.thymeleaf.org/">
+
+<head>
+ 	<link rel="stylesheet" href="https://maxcdn.bootstrapcdn.com/bootstrap/4.5.0/css/bootstrap.min.css"> 
+    <script src="https://ajax.googleapis.com/ajax/libs/jquery/1.12.4/jquery.min.js"></script> 
+    <script src="https://maxcdn.bootstrapcdn.com/bootstrap/4.5.0/js/bootstrap.min.js"></script>
+</head>
+
+<body>
+	<div>
+		<div class="jumbotron text-center">
+			<h3>TICKETS</h3>
+		</div>
+		<div>
+			<table class="table table-hover">
+				<tr class="bg-dark text-white">
+					<th>Id</th>
+					<th>First Name</th>
+					<th>Last Name</th>
+					<th>Passport Number</th>
+					<th>Number of Bags</th>
+					<th></th>
+				</tr>
+				<tr th:each="ob:${tickets}">
+						<td th:text=${ob.id}></td>
+						<td th:text=${ob.firstName}></td>
+						<td th:text=${ob.lastName}></td>
+						<td th:text=${ob.passportNumber}></td>
+						<td th:text=${ob.numberOfBags}></td>
+						<td><a class="btn btn-primary btn-block" th:href="@{/tickets/select(id=${ob.id})}">SELECT</a></td>
+				</tr>
+			</table>			
+		</div>
+	</div>
+</body>
+
+</html>

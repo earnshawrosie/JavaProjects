@@ -1,0 +1,170 @@
+<html xmlns:th="https://www.thymeleaf.org/">
+
+<head>
+	<link rel="stylesheet" href="https://maxcdn.bootstrapcdn.com/bootstrap/4.5.0/css/bootstrap.min.css">
+	<script src="https://ajax.googleapis.com/ajax/libs/jquery/1.12.4/jquery.min.js"></script>
+	<script src="https://maxcdn.bootstrapcdn.com/bootstrap/4.5.0/js/bootstrap.min.js"></script>
+	<style type="text/css">
+		.main-form,
+		.fee-area {
+			width: 340px;
+		}
+
+		.main-form {
+			margin: 50px auto 0px;
+		}
+
+		.fee-area {
+			margin: 10px auto;
+		}
+
+		.main-form section,
+		.fee-area section {
+			margin-bottom: 15px;
+			background: #f7f7f7;
+			box-shadow: 0px 2px 2px rgba(0, 0, 0, 0.3);
+		}
+
+		.main-form section {
+			padding: 30px;
+		}
+
+		.fee-area section {
+			padding: 30px 30px 30px;
+		}
+
+		.fee-area section>div {
+			text-align: center;
+		}
+
+		.main-form h3 {
+			margin: 0 0 15px;
+		}
+
+		.form-control,
+		.btn {
+			min-height: 38px;
+			border-radius: 2px;
+		}
+
+		.btn {
+			font-size: 15px;
+			font-weight: bold;
+		}
+
+		.hideElement {
+			display: none;
+		}
+	</style>
+</head>
+
+<body>
+	<div class="jumbotron text-center">
+		<h3>ENTER BAGGAGE WEIGHTS TO CALCULATE FEES</h3>
+	</div>
+
+	<div>
+		<table class="table table-hover">
+			<tr class="bg-dark text-white">
+				<th>First Name</th>
+				<th>Last Name</th>
+				<th>Passport Number</th>
+				<th>Number of Bags</th>
+			</tr>
+			<tr th:each="ob:${passenger}">
+				<td th:text=${ob.firstName}></td>
+				<td th:text=${ob.lastName}></td>
+				<td th:text=${ob.passportNumber}></td>
+				<td th:text=${ob.numberOfBags}></td>
+			</tr>
+		</table>
+	</div><br /><br />
+
+	<div class="main-form" id="main-form">
+		<input type="hidden" th:value="${passenger.numberOfBags}" id="numBags" name="numBags" />
+		<section>
+			<div th:each="i : ${#numbers.sequence(1, passenger.numberOfBags)}">
+				<input th:name="bagweight + ${i}" type="text" class="form-control" placeholder="Enter bag weight here..."
+					required="required">
+				<br />
+			</div><br />
+			<div>
+				<button onclick="loadData()" class="btn btn-primary btn-block">Calculate Fees</button>
+			</div>
+		</section>
+	</div>
+	<div class="fee-area hideElement" id="fee-area">
+		<section>
+			<div id="loader" class="hideElement">
+				<div class="spinner-border" role="status">
+					<span class="sr-only">Loading...</span>
+				</div>
+			</div>
+			<div id="fees" class="hideElement">
+				<br>
+				<p><strong>Total Fee : </strong><span id="totalFee"></span></p>
+				<p><strong>Bags : </strong><span id="bags"></span></p> 
+				<div>
+					<form>
+						<a class="btn btn-primary btn-block" th:href="@{/tickets/alltickets}">Process Another</a>
+					</form>
+				</div>
+			</div>
+		</section>
+	</div>
+
+</body>
+
+<script> 
+    function loadData() { 
+        document.getElementById("fee-area").classList.remove("hideElement"); 
+        document.getElementById("loader").classList.remove("hideElement"); 
+        document.getElementById("fees").classList.add("hideElement");
+        document.getElementById("bags").classList.add("hideElement");  
+        
+        var numBags = document.getElementById("numBags").value;
+        
+        var bagWeights = "";
+        var ix = 0;
+        for (var i = ix; i < numBags; i++) {
+			ix++;
+			var  bagWeight = document.getElementsByName("bagweight" + ix)[0].value;
+			if (i == 0) {
+				bagWeights += "?weights=" + bagWeight;
+			} else {
+				bagWeights += "&weights=" + bagWeight;
+			}
+		}
+		
+		if (bagWeights != "" && bagWeights != null) { 
+            var xhttp = new XMLHttpRequest(); 
+            xhttp.onreadystatechange = function() { 
+                if (this.readyState == 4 && this.status == 200) { 
+					var text = this.responseText;
+                    var jsonResponse = JSON.parse(this.responseText); 
+                    document.getElementById("totalFee").innerHTML = jsonResponse.total.toFixed(2); 
+                    
+                    var bagsDetails = "";
+					for (var i = 0; i < jsonResponse.bags.length; i++) {
+						var bag = jsonResponse.bags[i];
+						bagsDetails += "<br> Baggage Id: " + bag.id + "<br>" ;
+						bagsDetails += " Baggage Type: " + bag.baggageType + "<br>" ;
+						bagsDetails += " Weight: "  + bag.weight.toFixed(2) + " kg <br>";
+						bagsDetails += " Fee: " + bag.fee.toFixed(2) + " EUR <br>";
+					}
+					document.getElementById("bags").innerHTML = bagsDetails;
+                    
+                   	document.getElementById("loader").classList.add("hideElement"); 
+        			document.getElementById("fees").classList.remove("hideElement"); 
+        			document.getElementById("bags").classList.remove("hideElement"); 
+        			document.getElementById("main-form").classList.add("hideElement"); 
+                } 
+            }; 
+            xhttp.open("GET", "/api/baggage/calculatefee" + bagWeights, true); 
+            xhttp.send();
+            console.log("done");  
+        } else {
+            console.log("Enter bag weights to caculate...") 
+        } 
+    } 
+</script> 
